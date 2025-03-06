@@ -1,3 +1,7 @@
+"""Documentation for Alpaca API: 
+https://alpaca.markets/docs/api-documentation/api-v2/
+https://github.com/alpacahq/alpaca-py"""
+
 import os
 from alpaca_trade_api import REST
 from dotenv import load_dotenv
