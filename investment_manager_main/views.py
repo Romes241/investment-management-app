@@ -90,3 +90,5 @@ def mock_trade(request):
             return render(request, "investment_manager_main/mock_trade.html", {"error": f"Trade failed: {str(e)}"})
 
     return render(request, "investment_manager_main/mock_trade.html")
+
+    #hello
