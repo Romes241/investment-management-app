@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
 import matplotlib.pyplot as plt
 import io, base64
 import pandas as pd
@@ -32,7 +33,7 @@ def plot_to_base64(fig):
     buf = io.BytesIO()
     fig.savefig(buf, format="png")
     buf.seek(0)
-    plt.close(fig)  # ✅ Free memory
+    plt.close(fig)  
     return base64.b64encode(buf.getvalue()).decode()
 
 
