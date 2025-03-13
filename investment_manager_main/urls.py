@@ -1,21 +1,19 @@
 from django.urls import path
 from . import views
+from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
-    path('', views.home, name='home'),  
-    path('dashboard/', views.dashboard, name='dashboard'),  
+    path('', views.home, name='home'),
+    path('dashboard/', views.dashboard, name='dashboard'),
     path('register/', views.register, name='register'),
-    path('history/', views.stock_history, name='stock_history'),
-    path('mock-trade/', views.mock_trade, name='mock_trade'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
 
-    #Potential Site URLs matching design spec
-    #path('signup/', views.signup, name='Sign_Up'),
-    #path('login/', views.login, name='Login'),
-    #path('dashboard/', views.dashboard, name='Dashboard'),
-    #path('portfolio/', views.portfolio, name='Portfolio'),
-    #path('<id>/', views., name='Portfolio_Details'),
-    #path('trade/', views.trade, name='Mock_Trade'),
-    #path('analytics/', views.analytics, name='Analytics'),
-    #path('about/', views.about, name='About'),
-    #path('contact/', views.contact, name='Contact_Us'),
+    path('create-portfolio/', views.create_portfolio, name='create_portfolio'),
+    path('portfolio/<int:portfolio_id>/', views.portfolio_details, name='portfolio_details'),  
+    path('portfolio/<int:portfolio_id>/delete/', views.delete_portfolio, name='delete_portfolio'), 
+    path('portfolio/<int:portfolio_id>/mock-trade/', views.mock_trade, name='mock_trade'),
+    path('history/', views.stock_history, name='stock_history'),
+    path("get-stock-price/", views.get_stock_price_view, name="get_stock_price"),
+
 ]
