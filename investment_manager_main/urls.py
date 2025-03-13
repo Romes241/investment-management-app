@@ -7,6 +7,9 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('history/', views.stock_history, name='stock_history'),
     path('mock-trade/', views.mock_trade, name='mock_trade'),
+    path('login/', views.user_login, name='login'),
+    path('logout/', views.user_logout, name='logout'),
+    path('signup/', views.user_signup, name='signup'),
 
     #Potential Site URLs matching design spec
     #path('signup/', views.signup, name='Sign_Up'),
