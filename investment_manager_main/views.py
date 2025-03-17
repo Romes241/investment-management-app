@@ -1,6 +1,8 @@
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login
+
 from django.contrib.auth.decorators import login_required
 import matplotlib.pyplot as plt
 import io, base64
@@ -14,8 +16,8 @@ from django.http import JsonResponse
 def home(request):
     if request.user.is_authenticated:
         return redirect('dashboard') 
-
     return render(request, "home.html")
+
 
 @login_required
 def dashboard(request):
