@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-rj(*-h$^@l&s64tc-kw$e$cmu$s!6e&0)5sd^@1xw_%*(k=zb@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['https://romes241.eu.pythonanywhere.com']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'investment_manager_main',
 ]
 
 MIDDLEWARE = [
@@ -54,7 +55,7 @@ ROOT_URLCONF = 'investment_manager.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "investment_manager_main/templates"],  # Explicit path
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -66,6 +67,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'investment_manager.wsgi.application'
 
@@ -122,5 +124,5 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = '/'  
-LOGOUT_REDIRECT_URL = '/'  
+LOGIN_REDIRECT_URL = 'dashboard'  
+LOGOUT_REDIRECT_URL = 'home'  
