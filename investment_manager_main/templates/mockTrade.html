@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Mock Trade{% endblock %}
+
+{% block extra_js %}
+<script>
+    function fetchStockPrice() {
+        const symbolInput = document.getElementById("symbol").value.toUpperCase();
+        const priceDisplay = document.getElementById("stock-price");
+
+        if (symbolInput.length < 1) {
+            priceDisplay.innerText = "Enter a stock symbol";
+            return;
+        }
+
+        fetch(`/get-stock-price/?symbol=${symbolInput}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    priceDisplay.innerText = data.error;
+                    document.getElementById("current_price").value = ""; 
+                } else {
+                    priceDisplay.innerText = `Current Price: $${data.price.toFixed(2)}`;
+                    document.getElementById("current_price").value = data.price;
+                }
+            })
+            .catch(error => {
+                priceDisplay.innerText = "Error fetching price";
+                document.getElementById("current_price").value = ""; 
+            });
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+    <h2>Mock Trade</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        <label for="symbol">Stock Symbol:</label>
+        <input type="text" id="symbol" name="symbol" onkeyup="fetchStockPrice()" required>
+        <p id="stock-price">Enter a stock symbol</p>
+
+        <input type="hidden" id="current_price" name="current_price">
+
+        <label for="quantity">Quantity:</label>
+        <input type="number" id="quantity" name="quantity" required>
+
+        <label for="price_floor">Price Floor (Optional):</label>
+        <input type="number" id="price_floor" name="price_floor" step="0.01">
+
+        <label for="price_ceiling">Price Ceiling (Optional):</label>
+        <input type="number" id="price_ceiling" name="price_ceiling" step="0.01">
+
+        <button type="submit">Place Trade</button>
+    </form>
+{% endblock %}
