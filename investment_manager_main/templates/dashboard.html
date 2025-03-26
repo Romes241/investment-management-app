@@ -1,13 +1,30 @@
 {% extends "base.html" %}
 
-<html>
+{% block title %}Dashboard{% endblock %}
 
-    <head>
-        <title> </title>
-    </head>
+{% block content %}
+    <h1>Dashboard</h1>
 
-    <body>
-        <div></div>
-    </body>
-    
-</html>
+    <p>Welcome, {{ user.username }}!</p>
+
+    <h2>Your Portfolios</h2>
+    {% if portfolios %}
+        <ul>
+            {% for portfolio in portfolios %}
+                <li>
+                    <a href="{% url 'portfolio_details' portfolio.id %}">
+                        {{ portfolio.name }} - Balance: £{{ portfolio.balance }} - Total Value: £{{ portfolio.total_value }}
+                    </a>
+                    <form action="{% url 'delete_portfolio' portfolio.id %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit">Delete</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You have no portfolios yet.</p>
+    {% endif %}
+
+    <a href="{% url 'create_portfolio' %}">Create New Portfolio</a>
+{% endblock %}

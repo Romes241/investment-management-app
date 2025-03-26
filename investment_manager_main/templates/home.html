@@ -1,13 +1,17 @@
 {% extends "base.html" %}
 
-<html>
+{% block title %}Home{% endblock %}
 
-    <head>
-        <title> </title>
-    </head>
+{% block content %}
+    <h1>Welcome to the Investment Manager</h1>
+    <p>Manage your portfolios, track stock performance, and execute mock trades all in one place.</p>
 
-    <body>
-        <div></div>
-    </body>
-    
-</html>
+    {% if user.is_authenticated %}
+        <p>Welcome back, {{ user.username }}!</p>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+    {% else %}
+        <p>Sign up or log in to start managing your investments.</p>
+        <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
+        <a href="{% url 'register' %}" class="btn btn-secondary">Register</a>
+    {% endif %}
+{% endblock %}
