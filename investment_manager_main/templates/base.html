@@ -1,141 +1,157 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Investment Manager{% endblock %}</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            background-color: #f4f4f4;
+        }
+        nav {
+            background-color: #333;
+            padding: 10px;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: space-around;
+            margin: 0;
+            padding: 0;
+        }
+        nav ul li {
+            margin: 0 10px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+        }
+        main {
+            width: 80%;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            background: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+        }
+        button:hover {
+            background: #555;
+        }
+        .sidebar {
+            width: 80px;
+            height: 100vh;
+            background-color: #333;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+        .main-container {
+            flex: 1;
+            padding: 20px;
+            background: #f4f4f4;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .stats-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .stats-box {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .chart-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .sales-chart, .stocks-chart {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .table-container {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #f4f4f4;
+        }
+    </style>
 
-<HTML>
-body {
-font-family: Arial, sans-serif;
-margin: 0;
-padding: 0;
-display: flex;
-background-color: #f4f4f4;
-}
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
 
-nav {
-background: #333;
-padding: 10px;
-}
+    <!-- Navigation Bar -->
+    <nav>
+        <ul>
+            <li><a href="{% url 'home' %}">Home</a></li>
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'stock_history' %}">Stock History</a></li>
+                
+                {% with user.portfolio_set.all as portfolios %}
+                    {% if portfolios.exists %}
+                        <li><a href="{% url 'mock_trade' portfolio_id=portfolios.first.id %}">Mock Trade</a></li>
+                    {% endif %}
+                {% endwith %}
+                
+                <li>
+                    <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit">Logout</button>
+                    </form>
+                </li>
+            {% else %}
+                <li><a href="{% url 'login' %}">Login</a></li>
+                <li><a href="{% url 'register' %}">Register</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    
+    <main>
+        {% block content %}{% endblock %}
+    </main>
 
-nav ul {
-list-style: none;
-display: flex;
-justify-content: space-around;
-}
-
-nav ul li a {
-color: white;
-text-decoration: none;
-}
-
-main {
-width: 80%;
-margin: auto;
-background: white;
-padding: 20px;
-box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-}
-
-.auth-container, .form-container, .contact-container, .about-container {
-max-width: 500px;
-margin: auto;
-padding: 20px;
-text-align: center;
-}
-
-form input, form button {
-display: block;
-width: 100%;
-margin: 10px 0;
-padding: 10px;
-}
-
-button {
-background: #333;
-color: white;
-border: none;
-cursor: pointer;
-}
-
-button:hover {
-background: #555;
-}
-
-.sidebar {
-width: 80px;
-height: 100vh;
-background-color: #333;
-color: white;
-display: flex;
-flex-direction: column;
-align-items: center;
-padding: 20px 0;
-}
-
-.main-container {
-flex: 1;
-padding: 20px;
-background: #f4f4f4;
-}
-
-.header {
-display: flex;
-justify-content: space-between;
-align-items: center;
-padding: 10px;
-background: white;
-box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.stats-container {
-display: flex;
-gap: 10px;
-margin-top: 20px;
-}
-
-.stats-box {
-flex: 1;
-background: white;
-padding: 20px;
-border-radius: 5px;
-box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.chart-container {
-display: flex;
-gap: 20px;
-margin-top: 20px;
-}
-
-.sales-chart, .stocks-chart {
-flex: 1;
-background: white;
-padding: 20px;
-border-radius: 5px;
-box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.table-container {
-margin-top: 20px;
-background: white;
-padding: 20px;
-border-radius: 5px;
-box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-table {
-width: 100%;
-border-collapse: collapse;
-}
-
-table, th, td {
-border: 1px solid #ddd;
-}
-
-th, td {
-padding: 10px;
-text-align: left;
-}
-
-th {
-background: #f4f4f4;
-}
-
-</HTML>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

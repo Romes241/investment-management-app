@@ -1,44 +1,69 @@
 {% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Dashboard</title>
-</head>
+{% block title %}Dashboard{% endblock %}
 
-<body>
-    <div class="sidebar">☰</div>
-    <div class="main-container">
-        <div class="header">
-            <h2>Name</h2>
+{% block content %}
+<div class="main-container">
+    <!-- Header Section -->
+    <div class="header">
+        <h1>Dashboard</h1>
+        <p>Welcome, {{ user.username }}!</p>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-container">
+        <div class="stats-box">
+            <h4>Total Invested</h4>
+            <p>£{{ total_invested|default:"0.00" }}</p>
         </div>
-        <div class="stats-container">
-            <div class="stats-box">
-                <h4>Total Invested</h4>
-                <p>£</p>
-            </div>
-            <div class="stats-box">
-                <h4>Total Profit/Loss</h4>
-                <p>£</p>
-            </div>
-            <div class="stats-box">
-                <h4>Gains</h4>
-                <p>%</p>
-            </div>
+        <div class="stats-box">
+            <h4>Total Profit/Loss</h4>
+            <p>£{{ total_profit_loss|default:"0.00" }}</p>
         </div>
-        <div class="chart-container">
-            <div class="sales-chart">
-                <h4>Sales Performance</h4>
-                <p>Chart Placeholder</p>
-            </div>
-            <div class="stocks-chart">
-                <h4>Your Stocks</h4>
-                <p>Pie Chart Placeholder</p>
-            </div>
+        <div class="stats-box">
+            <h4>Gains</h4>
+            <p>{{ gains_percentage|default:"0.00" }}%</p>
         </div>
-        <div class="table-container">
-            <h4>Recent Trades</h4>
-            <table>
+    </div>
+
+    <!-- Portfolio Section -->
+    <h2>Your Portfolios</h2>
+    {% if portfolios %}
+        <ul>
+            {% for portfolio in portfolios %}
+                <li>
+                    <a href="{% url 'portfolio_details' portfolio.id %}">
+                        {{ portfolio.name }} - Balance: £{{ portfolio.balance }} - Total Value: £{{ portfolio.total_value }}
+                    </a>
+                    <form action="{% url 'delete_portfolio' portfolio.id %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit">Delete</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You have no portfolios yet.</p>
+    {% endif %}
+    <a href="{% url 'create_portfolio' %}">Create New Portfolio</a>
+
+    <!-- Charts Section -->
+    <div class="chart-container">
+        <div class="sales-chart">
+            <h4>Sales Performance</h4>
+            <p>Chart Placeholder</p>
+        </div>
+        <div class="stocks-chart">
+            <h4>Your Stocks</h4>
+            <p>Pie Chart Placeholder</p>
+        </div>
+    </div>
+
+    <!-- Recent Trades Section -->
+    <div class="table-container">
+        <h4>Recent Trades</h4>
+        <table>
+            <thead>
                 <tr>
                     <th>Stock</th>
                     <th>Order Date</th>
@@ -46,35 +71,23 @@
                     <th>Stock Market</th>
                     <th>P/E Ratio</th>
                 </tr>
+            </thead>
+            <tbody>
+                {% for trade in recent_trades %}
                 <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td>{{ trade.symbol }}</td>
+                    <td>{{ trade.timestamp|date:"Y-m-d" }}</td>
+                    <td>£{{ trade.trade_price }}</td>
+                    <td>{{ trade.market|default:"N/A" }}</td>
+                    <td>{{ trade.pe_ratio|default:"N/A" }}</td>
                 </tr>
+                {% empty %}
                 <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td colspan="5">No recent trades available.</td>
                 </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-            </table>
-        </div>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-</body>
+</div>
+{% endblock %}
