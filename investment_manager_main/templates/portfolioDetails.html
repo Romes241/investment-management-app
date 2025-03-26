@@ -1,2 +1,59 @@
 {% extends "base.html" %}
-    
+
+{% block title %}{{ portfolio.name }} Details{% endblock %}
+
+{% block content %}
+    <h1>{{ portfolio.name }}</h1>
+    <p><strong>Balance:</strong> ${{ balance }}</p>
+
+    <h2>Holdings</h2>
+    {% if holdings %}
+        <table>
+            <tr>
+                <th>Stock</th>
+                <th>Quantity</th>
+                <th>Average Price</th>
+                <th>Current Price</th>
+                <th>Total Value</th>
+            </tr>
+            {% for holding in holdings %}
+                <tr>
+                    <td>{{ holding.symbol }}</td>
+                    <td>{{ holding.quantity }}</td>
+                    <td>${{ holding.average_price }}</td>
+                    <td>${{ holding.current_price }}</td>
+                    <td>${{ holding.current_value }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No holdings yet.</p>
+    {% endif %}
+
+
+    <h2>Trade History</h2>
+    {% if trades %}
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Stock</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Trade Price</th>
+            </tr>
+            {% for trade in trades %}
+                <tr>
+                    <td>{{ trade.timestamp }}</td>
+                    <td>{{ trade.symbol }}</td>
+                    <td>{{ trade.trade_type|title }}</td>
+                    <td>{{ trade.quantity }}</td>
+                    <td>${{ trade.trade_price }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No trades yet.</p>
+    {% endif %}
+
+    <a href="{% url 'mock_trade' portfolio.id %}">Make a Trade</a>
+{% endblock %}
