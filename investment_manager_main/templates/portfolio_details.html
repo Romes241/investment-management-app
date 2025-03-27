@@ -6,6 +6,20 @@
     <h1>{{ portfolio.name }}</h1>
     <p><strong>Balance:</strong> ${{ balance }}</p>
 
+
+    <div class="stats-container">
+        <div class="stats-box">
+            <p><strong>Total Invested:</strong> £{{ total_invested|default:"0.00" }}</p>
+        </div>
+        <div class="stats-box">
+            <p><strong>Total Profit/Loss:</strong> £{{ total_profit_loss|default:"0.00" }}</p>
+        </div>
+        <div class="stats-box">
+            <p><strong>Gains:</strong> {{ gains_percentage|default:"0.00" }}%</p>
+        </div>
+    </div>
+
+
     <h2>Holdings</h2>
     {% if holdings %}
         <table>

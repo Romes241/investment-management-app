@@ -2,15 +2,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login
-
 from django.contrib.auth.decorators import login_required
 import matplotlib.pyplot as plt
 import io, base64
 import pandas as pd
 from .alpaca_api import get_stock_price, get_historical_data
-from .models import Portfolio, Holding, Trade
+from .models import Portfolio, Holding, Trade, ContactMessage
 from decimal import Decimal
 from django.http import JsonResponse
+
+
 
 
 def home(request):
@@ -207,6 +208,20 @@ def portfolio_details(request, portfolio_id):
         },
     )
 
+def portfolio_statistics_view(request, portfolio_id):
+    portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
+
+    context = {
+        'portfolio': portfolio,
+        'balance': portfolio.balance,
+        'total_invested': portfolio.total_invested(), 
+        'total_profit_loss': portfolio.total_profit_loss(),
+        'gains_percentage': portfolio.gains_percentage(),
+    }
+    
+    
+    return render(request, 'portfolio_details.html', context)
+
 @login_required
 def delete_portfolio(request, portfolio_id):
     portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
@@ -241,3 +256,41 @@ def get_user_holding(request):
     if holding:
         return JsonResponse({"quantity": holding.quantity})
     return JsonResponse({"quantity": 0})
+
+@login_required
+def get_stock_history(request):
+    symbol = request.GET.get("symbol", "").upper()
+    try:
+        df = get_historical_data(symbol)
+        if df is None or df.empty:
+            raise ValueError("No historical data found.")
+
+        df = df.sort_index()
+        return JsonResponse({
+            "dates": df.index.strftime('%Y-%m-%d').tolist(),
+            "prices": df['close'].tolist()
+        })
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+
+def about(request):
+    return render(request, "about.html")
+
+def contact(request):
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        email = request.POST.get("email", "").strip()
+        phone = request.POST.get("phone", "").strip()
+        message = request.POST.get("message", "").strip()
+
+        if name and email and message:
+            ContactMessage.objects.create(
+                name=name,
+                email=email,
+                phone=phone,
+                message=message
+            )
+            return render(request, "contact_us.html", {"success": True})
+
+    return render(request, "contact_us.html")
