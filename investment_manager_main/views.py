@@ -241,3 +241,40 @@ def get_user_holding(request):
     if holding:
         return JsonResponse({"quantity": holding.quantity})
     return JsonResponse({"quantity": 0})
+
+@login_required
+def get_stock_history(request):
+    symbol = request.GET.get("symbol", "").upper()
+    try:
+        df = get_historical_data(symbol)
+        if df is None or df.empty:
+            raise ValueError("No historical data found.")
+
+        df = df.sort_index()
+        return JsonResponse({
+            "dates": df.index.strftime('%Y-%m-%d').tolist(),
+            "prices": df['close'].tolist()
+        })
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+
+def about(request):
+    return render(request, "about.html")
+
+def contact(request):
+    if request.method == 'POST':
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        message = request.POST.get("message")
+        
+        
+        print(f"Contact message from {name} ({email}, {phone}): {message}")
+
+        return render(request, "contact_us.html", {
+            "success": True
+        })
+
+    return render(request, "contact_us.html")
+

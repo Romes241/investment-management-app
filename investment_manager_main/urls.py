@@ -16,4 +16,7 @@ urlpatterns = [
     path('history/', views.stock_history, name='stock_history'),
     path("get-stock-price/", views.get_stock_price_view, name="get_stock_price"),
     path("api/holdings/", views.get_user_holding, name="get_user_holding"),
+    path("get-stock-history/", views.get_stock_history, name="get_stock_history"),
+    path("contact/", views.contact, name="contact"),
+    path("about/", views.about, name="about"),
 ]
