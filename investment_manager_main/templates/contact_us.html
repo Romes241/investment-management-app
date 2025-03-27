@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block content %}
+<h1>Contact Us</h1>
+
+{% if success %}
+    <p style="color: green;">Your message has been received. Thank you!</p>
+{% endif %}
+
+<div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; margin-top: 20px;">
+
+    <div style="flex: 1; min-width: 300px;">
+        <h2>Send us a message</h2>
+        <form method="post">
+            {% csrf_token %}
+            <label for="name">Your Name:</label><br>
+            <input type="text" id="name" name="name" required style="width: 100%; padding: 8px;"><br><br>
+
+            <label for="email">Your Email:</label><br>
+            <input type="email" id="email" name="email" required style="width: 100%; padding: 8px;"><br><br>
+
+            <label for="phone">Phone Number:</label><br>
+            <input type="tel" id="phone" name="phone" style="width: 100%; padding: 8px;"><br><br>
+
+            <label for="message">Message:</label><br>
+            <textarea id="message" name="message" rows="5" required style="width: 100%; padding: 8px;"></textarea><br><br>
+
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <div style="flex: 1; min-width: 300px;">
+        <h2>Our Contact Info</h2>
+        <p><strong>Email:</strong> TradeSmart@aol.com</p>
+        <p><strong>Phone Number:</strong> 0141 753 9225</p>
+        <p><strong>Office Address:</strong> 2 St Vincent Place</p>
+        <p><a href="tbc" target="_blank">Anonymous feedback form</a></p>
+    </div>
+
+</div>
+{% endblock %}

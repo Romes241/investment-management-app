@@ -2,15 +2,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login
-
 from django.contrib.auth.decorators import login_required
 import matplotlib.pyplot as plt
 import io, base64
 import pandas as pd
 from .alpaca_api import get_stock_price, get_historical_data
-from .models import Portfolio, Holding, Trade
+from .models import Portfolio, Holding, Trade, ContactMessage
 from decimal import Decimal
 from django.http import JsonResponse
+
+
 
 
 def home(request):
@@ -263,18 +264,19 @@ def about(request):
     return render(request, "about.html")
 
 def contact(request):
-    if request.method == 'POST':
-        name = request.POST.get("name")
-        email = request.POST.get("email")
-        phone = request.POST.get("phone")
-        message = request.POST.get("message")
-        
-        
-        print(f"Contact message from {name} ({email}, {phone}): {message}")
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        email = request.POST.get("email", "").strip()
+        phone = request.POST.get("phone", "").strip()
+        message = request.POST.get("message", "").strip()
 
-        return render(request, "contact_us.html", {
-            "success": True
-        })
+        if name and email and message:
+            ContactMessage.objects.create(
+                name=name,
+                email=email,
+                phone=phone,
+                message=message
+            )
+            return render(request, "contact_us.html", {"success": True})
 
     return render(request, "contact_us.html")
-
