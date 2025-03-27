@@ -2,56 +2,89 @@
 
 {% block title %}Mock Trade{% endblock %}
 
-{% block extra_js %}
-<script>
-    function fetchStockPrice() {
-        const symbolInput = document.getElementById("symbol").value.toUpperCase();
-        const priceDisplay = document.getElementById("stock-price");
-
-        if (symbolInput.length < 1) {
-            priceDisplay.innerText = "Enter a stock symbol";
-            return;
-        }
-
-        fetch(`/get-stock-price/?symbol=${symbolInput}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    priceDisplay.innerText = data.error;
-                    document.getElementById("current_price").value = ""; 
-                } else {
-                    priceDisplay.innerText = `Current Price: $${data.price.toFixed(2)}`;
-                    document.getElementById("current_price").value = data.price;
-                }
-            })
-            .catch(error => {
-                priceDisplay.innerText = "Error fetching price";
-                document.getElementById("current_price").value = ""; 
-            });
-    }
-</script>
-{% endblock %}
-
 {% block content %}
-    <h2>Mock Trade</h2>
+<h2>Mock Trade - {{ portfolio.name }}</h2>
 
-    <form method="post">
-        {% csrf_token %}
-        <label for="symbol">Stock Symbol:</label>
-        <input type="text" id="symbol" name="symbol" onkeyup="fetchStockPrice()" required>
-        <p id="stock-price">Enter a stock symbol</p>
+{% if error %}
+    <p style="color: red;">{{ error }}</p>
+{% endif %}
 
-        <input type="hidden" id="current_price" name="current_price">
+<form method="post">
+    {% csrf_token %}
 
-        <label for="quantity">Quantity:</label>
-        <input type="number" id="quantity" name="quantity" required>
+    <label for="trade_type">Trade Type:</label>
+    <select id="trade_type" name="trade_type" onchange="handleTradeTypeChange()" required>
+        <option value="buy">Buy</option>
+        <option value="sell">Sell</option>
+    </select><br>
 
-        <label for="price_floor">Price Floor (Optional):</label>
-        <input type="number" id="price_floor" name="price_floor" step="0.01">
+    <label for="symbol">Stock Symbol:</label>
+    <input type="text" id="symbol" name="symbol" onkeyup="fetchStockPrice()" required><br>
 
-        <label for="price_ceiling">Price Ceiling (Optional):</label>
-        <input type="number" id="price_ceiling" name="price_ceiling" step="0.01">
+    <p id="stock-price">Enter a stock symbol</p>
+    <p id="owned-shares-info" style="display: none;"></p>
+    <input type="hidden" id="current_price" name="current_price">
 
-        <button type="submit">Place Trade</button>
-    </form>
+    <label for="quantity">Quantity:</label>
+    <input type="number" id="quantity" name="quantity" required><br>
+
+    <label for="price_floor">Price Floor (Optional):</label>
+    <input type="number" id="price_floor" name="price_floor" step="0.01"><br>
+
+    <label for="price_ceiling">Price Ceiling (Optional):</label>
+    <input type="number" id="price_ceiling" name="price_ceiling" step="0.01"><br>
+
+    <button type="submit">Place Trade</button>
+</form>
+
+<script>
+function fetchStockPrice() {
+    const symbol = document.getElementById("symbol").value.toUpperCase();
+    const tradeType = document.getElementById("trade_type").value;
+    const stockPrice = document.getElementById("stock-price");
+    const priceInput = document.getElementById("current_price");
+    const ownedInfo = document.getElementById("owned-shares-info");
+
+    if (!symbol) {
+        stockPrice.innerText = "Enter a stock symbol";
+        ownedInfo.style.display = "none";
+        return;
+    }
+
+    fetch(`/get-stock-price/?symbol=${symbol}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                stockPrice.innerText = data.error;
+                priceInput.value = "";
+            } else {
+                stockPrice.innerText = `Current Price: $${data.price.toFixed(2)}`;
+                priceInput.value = data.price;
+            }
+        });
+
+    if (tradeType === "sell") {
+        fetch(`/api/holdings/?symbol=${symbol}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.quantity !== undefined) {
+                    ownedInfo.style.display = "block";
+                    ownedInfo.innerText = `You own ${data.quantity} shares of ${symbol}`;
+                    document.getElementById("quantity").max = data.quantity;
+                } else {
+                    ownedInfo.style.display = "block";
+                    ownedInfo.innerText = `You don't own any shares of ${symbol}`;
+                    document.getElementById("quantity").max = 0;
+                }
+            });
+    } else {
+        ownedInfo.style.display = "none";
+        document.getElementById("quantity").removeAttribute("max");
+    }
+}
+
+function handleTradeTypeChange() {
+    fetchStockPrice();  
+}
+</script>
 {% endblock %}

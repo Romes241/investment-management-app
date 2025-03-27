@@ -14,7 +14,7 @@ class Portfolio(models.Model):
         return holdings_value + float(self.balance)  
 
     def __str__(self):
-        return f"{self.user.username} - {self.name} (${self.balance})"
+        return f"{self.user.username} - {self.name} (£{self.balance})"
 
 
 class Holding(models.Model):
