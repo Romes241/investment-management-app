@@ -79,9 +79,9 @@ def mock_trade(request, portfolio_id):
     portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
 
     if request.method == "POST":
+        trade_type = request.POST.get("trade_type", "buy")
         symbol = request.POST.get("symbol", "").strip().upper()
         qty = request.POST.get("quantity")
-        current_price = request.POST.get("current_price")
         price_floor = request.POST.get("price_floor", None)
         price_ceiling = request.POST.get("price_ceiling", None)
 
@@ -90,14 +90,13 @@ def mock_trade(request, portfolio_id):
             if qty <= 0:
                 raise ValueError("Quantity must be greater than zero.")
 
-            if not current_price:
-                raise ValueError("Stock price not provided.")
-            current_price = Decimal(current_price)
+            current_price = get_stock_price(symbol)
+            if current_price is None:
+                raise ValueError("Could not retrieve stock price.")
 
-            total_cost = qty * current_price
-
-            price_floor = Decimal(price_floor) if price_floor and price_floor.strip() else None
-            price_ceiling = Decimal(price_ceiling) if price_ceiling and price_ceiling.strip() else None
+            total_value = qty * current_price
+            price_floor = float(price_floor) if price_floor and price_floor.strip() else None
+            price_ceiling = float(price_ceiling) if price_ceiling and price_ceiling.strip() else None
 
             if price_floor and price_floor > current_price:
                 raise ValueError("Price floor must be lower than the current price.")
@@ -106,34 +105,47 @@ def mock_trade(request, portfolio_id):
             if price_floor and price_ceiling and price_floor >= price_ceiling:
                 raise ValueError("Price floor must be less than price ceiling.")
 
-            if portfolio.balance < total_cost:
-                raise ValueError("Insufficient funds for this trade.")
+            if trade_type == "buy":
+                if portfolio.balance < total_value:
+                    raise ValueError("Insufficient funds for this trade.")
+                portfolio.balance -= Decimal(str(total_value))
+            elif trade_type == "sell":
+                holding = Holding.objects.filter(portfolio=portfolio, symbol=symbol).first()
+                if not holding or holding.quantity < qty:
+                    raise ValueError("You do not have enough shares to sell.")
+                portfolio.balance += Decimal(str(total_value))
+                holding.quantity -= qty
+                if holding.quantity == 0:
+                    holding.delete()
+                else:
+                    holding.save()
+            else:
+                raise ValueError("Invalid trade type.")
 
-            portfolio.balance -= total_cost
             portfolio.save()
 
-            trade = Trade.objects.create(
+            Trade.objects.create(
                 portfolio=portfolio,
                 symbol=symbol,
                 quantity=qty,
-                trade_type="buy",
+                trade_type=trade_type,
                 trade_price=current_price,
                 price_floor=price_floor,
                 price_ceiling=price_ceiling
             )
 
-            holding, created = Holding.objects.get_or_create(
-                portfolio=portfolio,
-                symbol=symbol,
-                defaults={"quantity": qty, "average_price": current_price}
-            )
-
-            if not created:
-                total_shares = holding.quantity + qty
-                new_avg_price = ((holding.average_price * holding.quantity) + (current_price * qty)) / total_shares
-                holding.quantity = total_shares
-                holding.average_price = new_avg_price
-                holding.save()
+            if trade_type == "buy":
+                holding, created = Holding.objects.get_or_create(
+                    portfolio=portfolio,
+                    symbol=symbol,
+                    defaults={"quantity": qty, "average_price": current_price}
+                )
+                if not created:
+                    total_shares = holding.quantity + qty
+                    new_avg = ((holding.average_price * holding.quantity) + (current_price * qty)) / total_shares
+                    holding.quantity = total_shares
+                    holding.average_price = new_avg
+                    holding.save()
 
             return redirect("portfolio_details", portfolio_id=portfolio.id)
 
@@ -144,6 +156,7 @@ def mock_trade(request, portfolio_id):
             })
 
     return render(request, "mock_trade.html", {"portfolio": portfolio})
+
 
 @login_required
 def create_portfolio(request):
@@ -215,3 +228,16 @@ def get_stock_price_view(request):
         return JsonResponse({"error": "Could not retrieve stock price."}, status=404)
 
     return JsonResponse({"symbol": symbol, "price": price})
+
+@login_required
+def get_user_holding(request):
+    symbol = request.GET.get("symbol", "").strip().upper()
+    portfolio = Portfolio.objects.filter(user=request.user).first()
+
+    if not portfolio or not symbol:
+        return JsonResponse({"quantity": 0})
+
+    holding = Holding.objects.filter(portfolio=portfolio, symbol=symbol).first()
+    if holding:
+        return JsonResponse({"quantity": holding.quantity})
+    return JsonResponse({"quantity": 0})

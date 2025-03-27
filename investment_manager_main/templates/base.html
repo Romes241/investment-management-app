@@ -127,7 +127,7 @@
             <li><a href="{% url 'home' %}">Home</a></li>
             {% if user.is_authenticated %}
                 <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                <li><a href="{% url 'stock_history' %}">Stock History</a></li>
+                
                 
                 {% with user.portfolio_set.all as portfolios %}
                     {% if portfolios.exists %}

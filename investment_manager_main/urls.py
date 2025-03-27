@@ -15,6 +15,5 @@ urlpatterns = [
     path('portfolio/<int:portfolio_id>/mock-trade/', views.mock_trade, name='mock_trade'),
     path('history/', views.stock_history, name='stock_history'),
     path("get-stock-price/", views.get_stock_price_view, name="get_stock_price"),
-
-
+    path("api/holdings/", views.get_user_holding, name="get_user_holding"),
 ]
