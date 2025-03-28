@@ -11,9 +11,6 @@ from .models import Portfolio, Holding, Trade, ContactMessage
 from decimal import Decimal
 from django.http import JsonResponse
 
-
-
-
 def home(request):
     if request.user.is_authenticated:
         return redirect('dashboard') 
@@ -308,4 +305,5 @@ def stock_history_display(request, symbol):
         "initial_timeframe": timeframe
     })
 
-
+def external_information(request):
+    return render(request, "external_information.html")

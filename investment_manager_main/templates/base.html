@@ -124,20 +124,23 @@
     <!-- Navigation Bar -->
     <nav>
         <ul>
-            <li><a href="{% url 'home' %}">Home</a></li>
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            {% else %}
+                <li><a href="{% url 'home' %}">Home</a></li>
+            {% endif %}
+
             <li><a href="{% url 'about' %}">About Us</a></li>
             <li><a href="{% url 'contact' %}">Contact Us</a></li>
             <li><a href="{% url 'stock_search' %}">Stock History</a></li>
-
+            <li><a href="{% url 'external_information' %}">External Resources</a></li>
             {% if user.is_authenticated %}
-                <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
 
                 {% with user.portfolio_set.all as portfolios %}
                     {% if portfolios.exists %}
                         <li><a href="{% url 'mock_trade' portfolio_id=portfolios.first.id %}">Mock Trade</a></li>
                     {% endif %}
                 {% endwith %}
-
                 <li>
                     <form method="post" action="{% url 'logout' %}" style="display:inline;">
                         {% csrf_token %}
@@ -152,8 +155,6 @@
             {% endif %}
         </ul>
     </nav>
-
-    
     <main>
         {% block content %}{% endblock %}
     </main>

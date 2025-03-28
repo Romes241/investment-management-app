@@ -20,5 +20,7 @@ urlpatterns = [
     path("about/", views.about, name="about"),
     path("stock-search/", views.stock_search, name="stock_search"),
     path("stock-history/<str:symbol>/", views.stock_history_display, name="stock_history_display"),
-
+    path("external-information/", views.external_information, name="external_information"),
+   
 ]
+
