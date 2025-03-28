@@ -261,8 +261,19 @@ def get_user_holding(request):
 @login_required
 def get_stock_history(request):
     symbol = request.GET.get("symbol", "").upper()
+    timeframe = request.GET.get("timeframe", "1Y")
+
+    timeframe_days = {
+        "1D": 1,
+        "1W": 7,
+        "1M": 30,
+        "3M": 90,
+        "6M": 180,
+        "1Y": 365
+    }.get(timeframe, 365)
+
     try:
-        df = get_historical_data(symbol)
+        df = get_historical_data(symbol, days=timeframe_days)
         if df is None or df.empty:
             raise ValueError("No historical data found.")
 
@@ -273,7 +284,6 @@ def get_stock_history(request):
         })
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
-
 
 def about(request):
     return render(request, "about.html")
@@ -295,3 +305,43 @@ def contact(request):
             return render(request, "contact_us.html", {"success": True})
 
     return render(request, "contact_us.html")
+
+@login_required
+def stock_search(request):
+    return render(request, "stock_search.html")
+
+@login_required
+def stock_history_display(request, symbol):
+    timeframe = request.GET.get("timeframe", "1Y")
+    timeframe_days = {
+        "1D": 1, "1W": 7, "1M": 30, "3M": 90, "6M": 180, "1Y": 365
+    }.get(timeframe, 365)
+
+    history = get_historical_data(symbol, days=timeframe_days)
+    if history is None or history.empty:
+        return render(request, "stock_history.html", {
+            "symbol": symbol,
+            "error": "No data available for this stock."
+        })
+
+    metrics = {
+        "open": round(history['open'].iloc[-1], 2),
+        "high": round(history['high'].max(), 2),
+        "low": round(history['low'].min(), 2),
+        "volume": int(history['volume'].sum()),
+    }
+
+    dates = history.index.strftime('%Y-%m-%d').tolist()
+    prices = history['close'].tolist()
+
+    return render(request, "stock_history.html", {
+        "symbol": symbol,
+        "company_name": f"{symbol} Inc",
+        "overview": f"{symbol} is a major company in the industry.",
+        "metrics": metrics,
+        "dates": dates,
+        "prices": prices,
+        "initial_timeframe": timeframe
+    })
+
+

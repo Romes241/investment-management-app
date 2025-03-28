@@ -10,11 +10,14 @@ from alpaca_trade_api import REST
 from dotenv import load_dotenv
 import pandas as pd
 from typing import Optional, Dict, Any, List
+from datetime import datetime, timedelta
+import pytz
 
 load_dotenv()
 API_KEY = os.getenv("ALPACA_API_KEY")
 SECRET_KEY = os.getenv("ALPACA_SECRET_KEY")
-BASE_URL = os.getenv("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")  
+BASE_URL = os.getenv("ALPACA_BASE_URL", "https://paper-api.alpaca.markets") 
+VALID_TIMEFRAMES = {"1Min", "5Min", "15Min", "1Hour", "1Day"}
 
 
 api = REST(API_KEY, SECRET_KEY, BASE_URL)
@@ -36,7 +39,7 @@ def get_stock_price(symbol: str) -> Optional[float]:
         print(f"Error fetching stock price for {symbol}: {e}")
         return None
 
-def get_historical_data(symbol: str, timeframe: str = "day", limit: int = 30) -> Optional[pd.DataFrame]:
+def get_historical_data(symbol: str, timeframe: str = "1Day", days: int = 7) -> Optional[pd.DataFrame]:        
     """
     Get historical stock data for a given symbol.
     
@@ -49,9 +52,24 @@ def get_historical_data(symbol: str, timeframe: str = "day", limit: int = 30) ->
         Optional[pd.DataFrame]: DataFrame containing historical stock prices, or None if an error occurs.
     """
     try:
-        bars = api.get_bars(symbol, timeframe, limit=limit).df
-        return bars if not bars.empty else None
+        end_date = datetime.now(pytz.UTC)
+        start_date = end_date - timedelta(days=days)
+
+        bars = api.get_bars(
+            symbol,
+            timeframe,
+            start=start_date.isoformat(),
+            end=end_date.isoformat(),
+            feed='iex'
+        ).df
+
+        if bars.empty:
+            return None
+
+        return bars
     except Exception as e:
         print(f"Error fetching historical data for {symbol}: {e}")
         return None
+
+
 
