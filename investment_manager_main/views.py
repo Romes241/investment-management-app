@@ -156,6 +156,10 @@ def portfolio_details(request, portfolio_id):
     holdings = portfolio.holdings.all()
     trades = portfolio.trades.all()
 
+    trade_symbols = list(trades.values_list("symbol", flat=True))
+    trade_quantity = list(trades.values_list("quantity", flat=True))
+
+
     for holding in holdings:
         holding.current_price = get_stock_price(holding.symbol)
         holding.current_value = holding.current_price * holding.quantity if holding.current_price else 0
@@ -167,7 +171,10 @@ def portfolio_details(request, portfolio_id):
         "balance": portfolio.balance,
         "total_invested": portfolio.total_invested(),  
         "total_profit_loss": portfolio.total_profit_loss(),  
-        "gains_percentage": portfolio.gains_percentage(),  
+        "gains_percentage": portfolio.gains_percentage(), 
+        "trade_symbols":trade_symbols,
+        "trade_quantity":trade_quantity, 
+
     }
 
     return render(request, "portfolio_details.html", context)
