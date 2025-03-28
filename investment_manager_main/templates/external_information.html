@@ -3,33 +3,23 @@
 {% block title %}External Resources{% endblock %}
 
 {% block content %}
-<head>
-  <title>External Resources</title>
-</head>
-<body>
-  <div class="container">
-    <aside class="sidebar">
-      <div class="menu-button">☰</div>
-      <nav class="nav">
-        <ul>
-          <li><a href="#">Home</a></li>
-        </ul>
-      </nav>
-    </aside>
-      </header>
-
-      <section class="about-section">
-        <div class="about-box">
-          <h2>Resources </h2>
-          <p>If you are interested in reserching more information regarding investment please feel free to utilise these links to further your knowledge. </p>
-          <ul>
-            <li><a href="https://www.lloydsbank.com/investing/understanding-investing/investing-for-beginners.html">LLOYDS Investment Information</a></li>
-            <li><a href="https://www.investor.gov/introduction-investing">Government Website for Investing</a></li>
-            <li><a href="https://uk.investing.com/">Investing.com</a></li>
-          </ul></p>
-        </div>
-      </section>
-    </main>
-  </div>
-</body>
+    <div class="container">
+        <section class="about-section">
+            <div class="about-box" style="padding: 20px; border: 1px solid #ddd; background: white; color: black; border-radius: 5px; box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);">
+                <h2>Resources</h2>
+                <p>If you are interested in researching more information regarding investments, please feel free to utilize these links to further your knowledge.</p>
+                <div class="resource-links" style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="padding: 15px; background: #f4f4f4; border-radius: 5px;">
+                        <a href="https://www.lloydsbank.com/investing/understanding-investing/investing-for-beginners.html" target="_blank" style="color: black; text-decoration: none;">LLOYDS Investment Information</a>
+                    </div>
+                    <div style="padding: 15px; background: #f4f4f4; border-radius: 5px;">
+                        <a href="https://www.investor.gov/introduction-investing" target="_blank" style="color: black; text-decoration: none;">Government Website for Investing</a>
+                    </div>
+                    <div style="padding: 15px; background: #f4f4f4; border-radius: 5px;">
+                        <a href="https://uk.investing.com/" target="_blank" style="color: black; text-decoration: none;">Investing.com</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
 {% endblock %}
