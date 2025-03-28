@@ -3,6 +3,8 @@
 {% block title %}{{ portfolio.name }} Details{% endblock %}
 
 {% block content %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
 <h1>{{ portfolio.name }}</h1>
 <p><strong>Balance:</strong> ${{ balance }}</p>
 
@@ -92,7 +94,26 @@
     <!-- Pie Chart Placeholder -->
     <div style="flex: 1; min-width: 300px;">
         <strong>Portfolio Distribution</strong>
-        <canvas id="pieChart" width="300" height="300" style="background: #f9f9f9;"></canvas>
+        <!-- <canvas id="pieChart" width="300" height="300" style="background: #f9f9f9;"></canvas> -->
+        <div id="myPlot" style="width:100%;max-width:700px"></div>
+
+
+        <script>
+            const stock_names = [];
+            {% for symbol in trade_symbols %}
+                stock_names.push("{{ symbol }}");
+            {% endfor %}
+
+            const stock_quantities = [];
+            {% for quantity in trade_quantity %}
+                stock_quantities.push("{{ quantity }}");
+            {% endfor %}
+
+            const layout = {title:""};
+            const data = [{labels:stock_names, values:stock_quantities, type:"pie"}];
+
+            Plotly.newPlot("myPlot", data, layout);
+        </script>  
     </div>
 </div>
 {% endblock %}
