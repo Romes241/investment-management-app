@@ -13,7 +13,6 @@ urlpatterns = [
     path('portfolio/<int:portfolio_id>/', views.portfolio_details, name='portfolio_details'),  
     path('portfolio/<int:portfolio_id>/delete/', views.delete_portfolio, name='delete_portfolio'), 
     path('portfolio/<int:portfolio_id>/mock-trade/', views.mock_trade, name='mock_trade'),
-    path('history/', views.stock_history, name='stock_history'),
     path("get-stock-price/", views.get_stock_price_view, name="get_stock_price"),
     path("api/holdings/", views.get_user_holding, name="get_user_holding"),
     path("get-stock-history/", views.get_stock_history, name="get_stock_history"),
