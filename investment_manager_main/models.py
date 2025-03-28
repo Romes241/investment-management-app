@@ -9,16 +9,15 @@ class Portfolio(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def total_invested(self):
-        trades = self.trades.all()
-        if not trades.exists():  
-            return 0.0
-        return sum(trade.trade_price * trade.quantity for trade in trades)
+        return sum(trade.trade_price * trade.quantity 
+                   for trade in self.trades.all() 
+                   if trade.trade_type.lower() == 'buy')
+    
+    def current_portfolio_value(self):
+        return self.total_value()
 
     def total_profit_loss(self):
-        trades = self.trades.all()
-        if not trades.exists():
-            return 0.0
-        return sum(((trade.price_ceiling or trade.trade_price) - trade.trade_price) * trade.quantity for trade in trades)
+         return self.current_portfolio_value() - (float(self.balance) + self.total_invested())
     
     def gains_percentage(self):
         invested = self.total_invested()
@@ -29,7 +28,7 @@ class Portfolio(models.Model):
     def total_value(self):
         holdings = self.holdings.all()
         holdings_value = sum(h.stock_price() * h.quantity for h in holdings)
-        return holdings_value + float(self.balance)  
+        return holdings_value + float(self.balance) 
     
     def __str__(self):
         return f"{self.user.username} - {self.name} (£{self.balance})"

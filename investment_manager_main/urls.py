@@ -16,5 +16,6 @@ urlpatterns = [
     path('history/', views.stock_history, name='stock_history'),
     path("get-stock-price/", views.get_stock_price_view, name="get_stock_price"),
     path("api/holdings/", views.get_user_holding, name="get_user_holding"),
-    
+    path('portfolio/<int:portfolio_id>/statistics/', views.portfolio_statistics_view, name='portfolio_statistics'),
+
 ]
