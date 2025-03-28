@@ -122,12 +122,10 @@ class StockAlert(models.Model):
     def __str__(self):
         return f"Alert for {self.symbol} at ${self.target_price}"
 
-
-
 class ContactMessage(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=100)
     email = models.EmailField()
-    subject = models.CharField(max_length=255)
+    phone = models.CharField(max_length=20, blank=True, null=True)  
     message = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 

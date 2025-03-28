@@ -3,16 +3,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-import matplotlib.pyplot as plt
-import io, base64
+from django.db.models import Sum
 import pandas as pd
 from .alpaca_api import get_stock_price, get_historical_data
 from .models import Portfolio, Holding, Trade, ContactMessage
 from decimal import Decimal
 from django.http import JsonResponse
-
-
-
 
 def home(request):
     if request.user.is_authenticated:
@@ -20,15 +16,18 @@ def home(request):
     return render(request, "home.html")
 
 
+
 @login_required
 def dashboard(request):
     portfolios = Portfolio.objects.filter(user=request.user)
+    total_value = sum(p.total_value() for p in portfolios)  
+
     return render(request, "dashboard.html", {
         "user": request.user, 
         "portfolios": portfolios,
-        "no_portfolios": len(portfolios) == 0 
+        "total_value": total_value,
+        "no_portfolios": len(portfolios) == 0
     })
-
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -38,42 +37,6 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
-
-def plot_to_base64(fig):
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png")
-    buf.seek(0)
-    plt.close(fig)  
-    return base64.b64encode(buf.getvalue()).decode()
-
-def stock_history(request):
-    symbol = request.GET.get("symbol", "AAPL")  
-
-    try:
-        data = get_historical_data(symbol)
-        if data.empty:
-            raise ValueError("No data available for this stock.")  
-
-        fig, ax = plt.subplots()
-        ax.plot(data.index, data['close'], label=f"{symbol} Price", color='blue')
-        ax.set_title(f"{symbol} Stock Price History")
-        ax.set_xlabel("Date")
-        ax.set_ylabel("Price ($)")
-        ax.legend()
-
-        img_url = plot_to_base64(fig)  
-
-        return render(request, "stock_history.html", {
-            "img_url": img_url,
-            "symbol": symbol
-        })
-    
-    except Exception as e:
-        error_message = f"Error retrieving stock data: {str(e)}"
-        return render(request, "stock_history.html", {
-            "error": error_message,
-            "symbol": symbol
-        })
 
 @login_required
 def mock_trade(request, portfolio_id):
@@ -344,4 +307,5 @@ def stock_history_display(request, symbol):
         "initial_timeframe": timeframe
     })
 
-
+def external_information(request):
+    return render(request, "external_information.html")
