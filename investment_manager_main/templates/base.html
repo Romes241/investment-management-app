@@ -127,6 +127,7 @@
             <li><a href="{% url 'home' %}">Home</a></li>
             <li><a href="{% url 'about' %}">About Us</a></li>
             <li><a href="{% url 'contact' %}">Contact Us</a></li>
+            <li><a href="{% url 'stock_search' %}">Stock History</a></li>
 
             {% if user.is_authenticated %}
                 <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
