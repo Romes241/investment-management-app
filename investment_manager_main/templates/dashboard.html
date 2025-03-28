@@ -30,48 +30,5 @@
         <p>You have no portfolios yet.</p>
     {% endif %}
     <a href="{% url 'create_portfolio' %}">Create New Portfolio</a>
-
-    <!-- Charts Section -->
-    <div class="chart-container">
-        <div class="sales-chart">
-            <h4>Sales Performance</h4>
-            <p>Chart Placeholder</p>
-        </div>
-        <div class="stocks-chart">
-            <h4>Your Stocks</h4>
-            <p>Pie Chart Placeholder</p>
-        </div>
-    </div>
-
-    <!-- Recent Trades Section -->
-    <div class="table-container">
-        <h4>Recent Trades</h4>
-        <table>
-            <thead>
-                <tr>
-                    <th>Stock</th>
-                    <th>Order Date</th>
-                    <th>Amount (£)</th>
-                    <th>Stock Market</th>
-                    <th>P/E Ratio</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for trade in recent_trades %}
-                <tr>
-                    <td>{{ trade.symbol }}</td>
-                    <td>{{ trade.timestamp|date:"Y-m-d" }}</td>
-                    <td>£{{ trade.trade_price }}</td>
-                    <td>{{ trade.market|default:"N/A" }}</td>
-                    <td>{{ trade.pe_ratio|default:"N/A" }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5">No recent trades available.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
 </div>
 {% endblock %}
