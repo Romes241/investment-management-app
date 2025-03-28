@@ -197,16 +197,17 @@ def portfolio_details(request, portfolio_id):
         holding.current_price = get_stock_price(holding.symbol)
         holding.current_value = holding.current_price * holding.quantity if holding.current_price else 0
 
-    return render(
-        request,
-        "portfolio_details.html",
-        {
-            "portfolio": portfolio,
-            "holdings": holdings,
-            "trades": trades,
-            "balance": portfolio.balance,  
-        },
-    )
+    context = {
+        "portfolio": portfolio,
+        "holdings": holdings,
+        "trades": trades,
+        "balance": portfolio.balance,
+        "total_invested": portfolio.total_invested(),  
+        "total_profit_loss": portfolio.total_profit_loss(),  
+        "gains_percentage": portfolio.gains_percentage(),  
+    }
+
+    return render(request, "portfolio_details.html", context)
 
 def portfolio_statistics_view(request, portfolio_id):
     portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
