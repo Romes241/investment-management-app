@@ -3,8 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-
-import io, base64
+from django.db.models import Sum
 import pandas as pd
 from .alpaca_api import get_stock_price, get_historical_data
 from .models import Portfolio, Holding, Trade, ContactMessage
@@ -17,15 +16,18 @@ def home(request):
     return render(request, "home.html")
 
 
+
 @login_required
 def dashboard(request):
     portfolios = Portfolio.objects.filter(user=request.user)
+    total_value = sum(p.total_value() for p in portfolios)  
+
     return render(request, "dashboard.html", {
         "user": request.user, 
         "portfolios": portfolios,
-        "no_portfolios": len(portfolios) == 0 
+        "total_value": total_value,
+        "no_portfolios": len(portfolios) == 0
     })
-
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
