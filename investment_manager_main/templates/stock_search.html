@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Stock Lookup{% endblock %}
+
+{% block content %}
+<h1>Stock History Lookup</h1>
+<form method="get" action="{% url 'stock_search' %}" onsubmit="return goToHistory(event)">
+    <label for="symbol">Enter Stock Symbol:</label>
+    <input type="text" id="symbol" name="symbol" placeholder="e.g. AAPL" required>
+    <button type="submit">Search</button>
+</form>
+
+<script>
+    function goToHistory(event) {
+        event.preventDefault();
+        const symbol = document.getElementById("symbol").value.trim().toUpperCase();
+        if (symbol) {
+            window.location.href = `/stock-history/${symbol}/`;
+        }
+        return false;
+    }
+</script>
+{% endblock %}

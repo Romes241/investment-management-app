@@ -3,57 +3,175 @@
 {% block title %}{{ portfolio.name }} Details{% endblock %}
 
 {% block content %}
-    <h1>{{ portfolio.name }}</h1>
-    <p><strong>Balance:</strong> ${{ balance }}</p>
+<h1>{{ portfolio.name }}</h1>
+<p><strong>Balance:</strong> ${{ balance }}</p>
 
-    <h2>Holdings</h2>
-    {% if holdings %}
-        <table>
-            <tr>
-                <th>Stock</th>
-                <th>Quantity</th>
-                <th>Average Price</th>
-                <th>Current Price</th>
-                <th>Total Value</th>
-            </tr>
+<div class="stats-container">
+    <div class="stats-box">
+        <p><strong>Total Invested:</strong> £{{ total_invested|default:"0.00" }}</p>
+    </div>
+    <div class="stats-box">
+        <p><strong>Total Profit/Loss:</strong> £{{ total_profit_loss|default:"0.00" }}</p>
+    </div>
+    <div class="stats-box">
+        <p><strong>Gains:</strong> {{ gains_percentage|default:"0.00" }}%</p>
+    </div>
+</div>
+
+<h2>Holdings</h2>
+{% if holdings %}
+    <table>
+        <tr>
+            <th>Stock</th>
+            <th>Quantity</th>
+            <th>Average Price</th>
+            <th>Current Price</th>
+            <th>Total Value</th>
+        </tr>
+        {% for holding in holdings %}
+        <tr>
+            <td>{{ holding.symbol }}</td>
+            <td>{{ holding.quantity }}</td>
+            <td>${{ holding.average_price }}</td>
+            <td>${{ holding.current_price }}</td>
+            <td>${{ holding.current_value }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>No holdings yet.</p>
+{% endif %}
+
+<h2>Trade History</h2>
+{% if trades %}
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>Stock</th>
+            <th>Type</th>
+            <th>Quantity</th>
+            <th>Trade Price</th>
+        </tr>
+        {% for trade in trades %}
+        <tr>
+            <td>{{ trade.timestamp }}</td>
+            <td>{{ trade.symbol }}</td>
+            <td>{{ trade.trade_type|title }}</td>
+            <td>{{ trade.quantity }}</td>
+            <td>${{ trade.trade_price }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>No trades yet.</p>
+{% endif %}
+
+<a href="{% url 'mock_trade' portfolio.id %}">Make a Trade</a>
+
+<hr>
+
+<h2>Stock Performance</h2>
+
+<div style="display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start;">
+
+    <!-- Line Chart Section -->
+    <div style="flex: 2; min-width: 300px;">
+        <label for="stock-select">Select a stock:</label>
+        <select id="stock-select">
+            <option value="">-- Choose a stock --</option>
             {% for holding in holdings %}
-                <tr>
-                    <td>{{ holding.symbol }}</td>
-                    <td>{{ holding.quantity }}</td>
-                    <td>${{ holding.average_price }}</td>
-                    <td>${{ holding.current_price }}</td>
-                    <td>${{ holding.current_value }}</td>
-                </tr>
+                <option value="{{ holding.symbol }}" data-buy-price="{{ holding.average_price }}">
+                    {{ holding.symbol }}
+                </option>
             {% endfor %}
-        </table>
-    {% else %}
-        <p>No holdings yet.</p>
-    {% endif %}
+        </select>
 
+        <canvas id="stockChart" width="600" height="300" style="margin-top: 20px;"></canvas>
+    </div>
 
-    <h2>Trade History</h2>
-    {% if trades %}
-        <table>
-            <tr>
-                <th>Date</th>
-                <th>Stock</th>
-                <th>Type</th>
-                <th>Quantity</th>
-                <th>Trade Price</th>
-            </tr>
-            {% for trade in trades %}
-                <tr>
-                    <td>{{ trade.timestamp }}</td>
-                    <td>{{ trade.symbol }}</td>
-                    <td>{{ trade.trade_type|title }}</td>
-                    <td>{{ trade.quantity }}</td>
-                    <td>${{ trade.trade_price }}</td>
-                </tr>
-            {% endfor %}
-        </table>
-    {% else %}
-        <p>No trades yet.</p>
-    {% endif %}
+    <!-- Pie Chart Placeholder -->
+    <div style="flex: 1; min-width: 300px;">
+        <strong>Portfolio Distribution</strong>
+        <canvas id="pieChart" width="300" height="300" style="background: #f9f9f9;"></canvas>
+    </div>
+</div>
+{% endblock %}
 
-    <a href="{% url 'mock_trade' portfolio.id %}">Make a Trade</a>
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const chartCanvas = document.getElementById('stockChart');
+    let stockChart;
+
+    document.getElementById('stock-select').addEventListener('change', function () {
+        const symbol = this.value;
+        const buyPrice = parseFloat(this.options[this.selectedIndex].dataset.buyPrice);
+
+        if (!symbol) return;
+
+        fetch(`/get-stock-history/?symbol=${symbol}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                const labels = data.dates;
+                const prices = data.prices;
+
+                if (!prices || prices.length === 0) {
+                    alert("No price data available.");
+                    return;
+                }
+
+                if (stockChart) stockChart.destroy();
+
+                stockChart = new Chart(chartCanvas, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: `${symbol} Price`,
+                                data: prices,
+                                borderColor: 'blue',
+                                backgroundColor: 'rgba(0,0,255,0.1)',
+                                fill: false,
+                                tension: 0.3,
+                                pointRadius: 2
+                            },
+                            {
+                                label: 'Buy Price',
+                                data: Array(labels.length).fill(buyPrice),
+                                borderColor: 'red',
+                                borderDash: [5, 5],
+                                pointRadius: 0,
+                                borderWidth: 2,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: true }
+                        },
+                        scales: {
+                            y: {
+                                title: { display: true, text: 'Price ($)' },
+                                beginAtZero: false
+                            },
+                            x: {
+                                title: { display: true, text: 'Date' }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching stock data:', error);
+            });
+    });
+</script>
 {% endblock %}

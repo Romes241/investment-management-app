@@ -2,16 +2,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login
-
 from django.contrib.auth.decorators import login_required
-import matplotlib.pyplot as plt
-import io, base64
+from django.db.models import Sum
 import pandas as pd
 from .alpaca_api import get_stock_price, get_historical_data
-from .models import Portfolio, Holding, Trade
+from .models import Portfolio, Holding, Trade, ContactMessage
 from decimal import Decimal
 from django.http import JsonResponse
-
 
 def home(request):
     if request.user.is_authenticated:
@@ -19,15 +16,18 @@ def home(request):
     return render(request, "home.html")
 
 
+
 @login_required
 def dashboard(request):
     portfolios = Portfolio.objects.filter(user=request.user)
+    total_value = sum(p.total_value() for p in portfolios)  
+
     return render(request, "dashboard.html", {
         "user": request.user, 
         "portfolios": portfolios,
-        "no_portfolios": len(portfolios) == 0 
+        "total_value": total_value,
+        "no_portfolios": len(portfolios) == 0
     })
-
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -37,42 +37,6 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
-
-def plot_to_base64(fig):
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png")
-    buf.seek(0)
-    plt.close(fig)  
-    return base64.b64encode(buf.getvalue()).decode()
-
-def stock_history(request):
-    symbol = request.GET.get("symbol", "AAPL")  
-
-    try:
-        data = get_historical_data(symbol)
-        if data.empty:
-            raise ValueError("No data available for this stock.")  
-
-        fig, ax = plt.subplots()
-        ax.plot(data.index, data['close'], label=f"{symbol} Price", color='blue')
-        ax.set_title(f"{symbol} Stock Price History")
-        ax.set_xlabel("Date")
-        ax.set_ylabel("Price ($)")
-        ax.legend()
-
-        img_url = plot_to_base64(fig)  
-
-        return render(request, "stock_history.html", {
-            "img_url": img_url,
-            "symbol": symbol
-        })
-    
-    except Exception as e:
-        error_message = f"Error retrieving stock data: {str(e)}"
-        return render(request, "stock_history.html", {
-            "error": error_message,
-            "symbol": symbol
-        })
 
 @login_required
 def mock_trade(request, portfolio_id):
@@ -196,16 +160,31 @@ def portfolio_details(request, portfolio_id):
         holding.current_price = get_stock_price(holding.symbol)
         holding.current_value = holding.current_price * holding.quantity if holding.current_price else 0
 
-    return render(
-        request,
-        "portfolio_details.html",
-        {
-            "portfolio": portfolio,
-            "holdings": holdings,
-            "trades": trades,
-            "balance": portfolio.balance,  
-        },
-    )
+    context = {
+        "portfolio": portfolio,
+        "holdings": holdings,
+        "trades": trades,
+        "balance": portfolio.balance,
+        "total_invested": portfolio.total_invested(),  
+        "total_profit_loss": portfolio.total_profit_loss(),  
+        "gains_percentage": portfolio.gains_percentage(),  
+    }
+
+    return render(request, "portfolio_details.html", context)
+
+def portfolio_statistics_view(request, portfolio_id):
+    portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
+
+    context = {
+        'portfolio': portfolio,
+        'balance': portfolio.balance,
+        'total_invested': portfolio.total_invested(), 
+        'total_profit_loss': portfolio.total_profit_loss(),
+        'gains_percentage': portfolio.gains_percentage(),
+    }
+    
+    
+    return render(request, 'portfolio_details.html', context)
 
 @login_required
 def delete_portfolio(request, portfolio_id):
@@ -241,3 +220,92 @@ def get_user_holding(request):
     if holding:
         return JsonResponse({"quantity": holding.quantity})
     return JsonResponse({"quantity": 0})
+
+@login_required
+def get_stock_history(request):
+    symbol = request.GET.get("symbol", "").upper()
+    timeframe = request.GET.get("timeframe", "1Y")
+
+    timeframe_days = {
+        "1D": 1,
+        "1W": 7,
+        "1M": 30,
+        "3M": 90,
+        "6M": 180,
+        "1Y": 365
+    }.get(timeframe, 365)
+
+    try:
+        df = get_historical_data(symbol, days=timeframe_days)
+        if df is None or df.empty:
+            raise ValueError("No historical data found.")
+
+        df = df.sort_index()
+        return JsonResponse({
+            "dates": df.index.strftime('%Y-%m-%d').tolist(),
+            "prices": df['close'].tolist()
+        })
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+def about(request):
+    return render(request, "about.html")
+
+def contact(request):
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        email = request.POST.get("email", "").strip()
+        phone = request.POST.get("phone", "").strip()
+        message = request.POST.get("message", "").strip()
+
+        if name and email and message:
+            ContactMessage.objects.create(
+                name=name,
+                email=email,
+                phone=phone,
+                message=message
+            )
+            return render(request, "contact_us.html", {"success": True})
+
+    return render(request, "contact_us.html")
+
+@login_required
+def stock_search(request):
+    return render(request, "stock_search.html")
+
+@login_required
+def stock_history_display(request, symbol):
+    timeframe = request.GET.get("timeframe", "1Y")
+    timeframe_days = {
+        "1D": 1, "1W": 7, "1M": 30, "3M": 90, "6M": 180, "1Y": 365
+    }.get(timeframe, 365)
+
+    history = get_historical_data(symbol, days=timeframe_days)
+    if history is None or history.empty:
+        return render(request, "stock_history.html", {
+            "symbol": symbol,
+            "error": "No data available for this stock."
+        })
+
+    metrics = {
+        "open": round(history['open'].iloc[-1], 2),
+        "high": round(history['high'].max(), 2),
+        "low": round(history['low'].min(), 2),
+        "volume": int(history['volume'].sum()),
+    }
+
+    dates = history.index.strftime('%Y-%m-%d').tolist()
+    prices = history['close'].tolist()
+
+    return render(request, "stock_history.html", {
+        "symbol": symbol,
+        "company_name": f"{symbol} Inc",
+        "overview": f"{symbol} is a major company in the industry.",
+        "metrics": metrics,
+        "dates": dates,
+        "prices": prices,
+        "initial_timeframe": timeframe
+    })
+
+def external_information(request):
+    return render(request, "external_information.html")

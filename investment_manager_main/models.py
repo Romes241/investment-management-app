@@ -5,14 +5,31 @@ from .alpaca_api import get_stock_price
 class Portfolio(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="portfolios")
     name = models.CharField(max_length=100, default="Default Portfolio")
-    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)  
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def total_invested(self):
+        return sum(trade.trade_price * trade.quantity 
+                   for trade in self.trades.all() 
+                   if trade.trade_type.lower() == 'buy')
+    
+    def current_portfolio_value(self):
+        return self.total_value()
+
+    def total_profit_loss(self):
+         return self.current_portfolio_value() - (float(self.balance) + self.total_invested())
+    
+    def gains_percentage(self):
+        invested = self.total_invested()
+        if invested == 0:
+            return 0
+        return round((self.total_profit_loss() / invested) * 100, 2)
+    
     def total_value(self):
         holdings = self.holdings.all()
         holdings_value = sum(h.stock_price() * h.quantity for h in holdings)
-        return holdings_value + float(self.balance)  
-
+        return holdings_value + float(self.balance) 
+    
     def __str__(self):
         return f"{self.user.username} - {self.name} (£{self.balance})"
 
@@ -105,12 +122,10 @@ class StockAlert(models.Model):
     def __str__(self):
         return f"Alert for {self.symbol} at ${self.target_price}"
 
-
-
 class ContactMessage(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=100)
     email = models.EmailField()
-    subject = models.CharField(max_length=255)
+    phone = models.CharField(max_length=20, blank=True, null=True)  
     message = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
