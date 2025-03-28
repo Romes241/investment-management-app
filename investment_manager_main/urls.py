@@ -19,4 +19,7 @@ urlpatterns = [
     path("get-stock-history/", views.get_stock_history, name="get_stock_history"),
     path("contact/", views.contact, name="contact"),
     path("about/", views.about, name="about"),
+    path("stock-search/", views.stock_search, name="stock_search"),
+    path("stock-history/<str:symbol>/", views.stock_history_display, name="stock_history_display"),
+
 ]

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}{{ symbol }} Details{% endblock %}
+
+{% block content %}
+<div class="stock-container">
+    <h1 class="stock-header">{{ company_name }}</h1>
+    <h2 class="stock-subtitle">{{ symbol }}</h2>
+
+    <div class="overview">
+        <h3>Overview</h3>
+        <p>{{ overview }}</p>
+    </div>
+
+    <div class="chart-section">
+        <label for="timeframe">Change Timeframe:</label>
+        <select id="timeframe">
+            <option value="1D">1 Day</option>
+            <option value="1W">1 Week</option>
+            <option value="1M">1 Month</option>
+            <option value="3M">3 Months</option>
+            <option value="6M">6 Months</option>
+            <option value="1Y" selected>1 Year</option>
+        </select>
+
+        <canvas id="priceChart" width="600" height="300"></canvas>
+    </div>
+
+    <div class="metrics">
+        <h3>Stock Metrics</h3>
+        <ul>
+            <li><strong>Open:</strong> {{ metrics.open }}</li>
+            <li><strong>High:</strong> {{ metrics.high }}</li>
+            <li><strong>Low:</strong> {{ metrics.low }}</li>
+            <li><strong>Volume:</strong> {{ metrics.volume }}</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let chart;
+    const symbol = "{{ symbol }}";
+
+    function fetchAndRenderChart(timeframe = "1Y") {
+        fetch(`/get-stock-history/?symbol=${symbol}&timeframe=${timeframe}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) return alert(data.error);
+
+                if (chart) {
+                    chart.data.labels = data.dates;
+                    chart.data.datasets[0].data = data.prices;
+                    chart.update();
+                } else {
+                    chart = new Chart(document.getElementById("priceChart"), {
+                        type: 'line',
+                        data: {
+                            labels: data.dates,
+                            datasets: [{
+                                label: `${symbol} Price`,
+                                data: data.prices,
+                                borderColor: 'blue',
+                                fill: false,
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: { title: { display: true, text: "Date" }},
+                                y: { title: { display: true, text: "Price ($)" }}
+                            }
+                        }
+                    });
+                }
+            });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const tfDropdown = document.getElementById("timeframe");
+        tfDropdown.addEventListener("change", function () {
+            fetchAndRenderChart(this.value);
+        });
+
+        fetchAndRenderChart(tfDropdown.value);
+    });
+</script>
+{% endblock %}
